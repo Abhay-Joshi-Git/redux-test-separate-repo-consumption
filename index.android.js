@@ -9,6 +9,7 @@ import {
 import IssueStore from 'redux-test-separate-math/store.js';
 import PMTstore, {modules} from 'project-management-tool-redux';
 import { connect, Provider } from 'react-redux';
+import InfiniteScrollView from 'react-native-infinite-scroll-view';
 
 class separateReduxClient extends Component {
 
@@ -20,21 +21,20 @@ class separateReduxClient extends Component {
             rowHasChanged: (r1, r2) => r1 !== r2
         })
         this.state = {
-            dataSource: ds.cloneWithRows(props.issues.toArray())
+            dataSource: ds.cloneWithRows(props.issues.toArray()),
+            issues: [...props.issues.toArray()]
         }
     }
 
     componentWillReceiveProps(nextProps) {
         this.setState({
-            dataSource: this.state.dataSource.cloneWithRows(nextProps.issues.toArray())
+            dataSource: this.state.dataSource.cloneWithRows(nextProps.issues.toArray()),
+            issues: [...nextProps.issues.toArray()]
         })
     }
 
     componentDidMount() {
-        this.props.loadIssues({
-            offset: 0,
-            qty: 16
-        });
+        this.loadMoreContentAsync()
     }
 
     render() {
@@ -53,10 +53,21 @@ class separateReduxClient extends Component {
     getIssuesList() {
         return (
             <ListView
+                renderScrollComponent={props => <InfiniteScrollView {...props} />}
                 dataSource={this.state.dataSource}
                 renderRow={this.renderRow}
+                canLoadMore={true}
+                onLoadMoreAsync={this.loadMoreContentAsync.bind(this)}
             />
         )
+    }
+
+    loadMoreContentAsync() {
+        this.props.loadIssues({
+            offset: this.state.issues.length,
+            qty: 16
+        })
+        return Promise.resolve(true)
     }
 
     renderRow(issue) {
