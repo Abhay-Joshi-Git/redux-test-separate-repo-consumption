@@ -3,7 +3,8 @@ import {
   AppRegistry,
   StyleSheet,
   Text,
-  View
+  View,
+  ListView
 } from 'react-native';
 import IssueStore from 'redux-test-separate-math/store.js';
 import PMTstore, {modules} from 'project-management-tool-redux';
@@ -11,53 +12,65 @@ import { connect, Provider } from 'react-redux';
 
 class separateReduxClient extends Component {
 
+    constructor(props) {
+        super();
+
+        var ds = new ListView.DataSource({
+            //rowHasChanged: (r1, r2) => !immutable.is(r1, r2)
+            rowHasChanged: (r1, r2) => r1 !== r2
+        })
+        this.state = {
+            dataSource: ds.cloneWithRows(props.issues.toArray())
+        }
+    }
+
+    componentWillReceiveProps(nextProps) {
+        this.setState({
+            dataSource: this.state.dataSource.cloneWithRows(nextProps.issues.toArray())
+        })
+    }
+
     componentDidMount() {
         this.props.loadIssues({
-            offset:40,
-            qty:6
+            offset: 0,
+            qty: 16
         });
     }
 
-  render() {
-    return (
-      <View style={styles.container}>
-        <Text>
-            List of Issues
-        </Text>
-        <View
-            style={
-                      {
-                          alignSelf: 'stretch'
-                      }
-                }
-        >
-            {this.getIssuesList()}
-        </View>
-      </View>
-    );
-  }
+    render() {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.headerText}>
+                    List of Issues
+                </Text>
+                <View style={styles.listViewContainer}>
+                    {this.getIssuesList()}
+                </View>
+            </View>
+        );
+    }
 
-  getIssuesList() {
-      return this.props.issues.map(issue => {
-          return (
-              <View key={issue.get('id')} style={
-                        {
-                            borderWidth: 1,
-                            flex: 1,
-                            alignItems: 'center'
-                        }
-                  }
-              >
-                  <Text>
-                      id: {issue.get('id')}
-                  </Text>
-                  <Text>
-                      summary: {issue.get('summary')}
-                  </Text>
-              </View>
-          )
-      })
-  }
+    getIssuesList() {
+        return (
+            <ListView
+                dataSource={this.state.dataSource}
+                renderRow={this.renderRow}
+            />
+        )
+    }
+
+    renderRow(issue) {
+        return (
+            <View key={issue.get('id')} style={styles.issueCotainer}>
+                <Text>
+                    id: {issue.get('id')}
+                </Text>
+                <Text>
+                    summary: {issue.get('summary')}
+                </Text>
+            </View>
+        )
+    }
 }
 
 const mapStateToProps = (state) => {
@@ -78,12 +91,25 @@ const App = () => (
 )
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  }
+    container: {
+        flex: 1,
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+    },
+    listViewContainer: {
+        flex: 1
+    },
+    headerText: {
+        fontSize: 30,
+        marginBottom: 5
+    },
+    issueCotainer: {
+        backgroundColor: 'rgb(240, 240, 240)',
+        alignItems: 'flex-start',
+        flex: 1,
+        marginBottom: 2,
+        paddingLeft: 5
+    }
 });
 
 AppRegistry.registerComponent('separateReduxClient', () => App);
