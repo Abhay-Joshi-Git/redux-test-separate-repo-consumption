@@ -6,15 +6,23 @@ import {
   View
 } from 'react-native';
 import IssueStore from 'redux-test-separate-math/store.js';
+import PMTstore, {modules} from 'project-management-tool-redux';
 import { connect, Provider } from 'react-redux';
 
-
 class separateReduxClient extends Component {
+
+    componentDidMount() {
+        this.props.loadIssues({
+            offset:40,
+            qty:6
+        });
+    }
+
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Welcome to React Native!
+        <Text>
+            List of Issues
         </Text>
         <View
             style={
@@ -32,7 +40,7 @@ class separateReduxClient extends Component {
   getIssuesList() {
       return this.props.issues.map(issue => {
           return (
-              <View key={issue.id} style={
+              <View key={issue.get('id')} style={
                         {
                             borderWidth: 1,
                             flex: 1,
@@ -41,10 +49,10 @@ class separateReduxClient extends Component {
                   }
               >
                   <Text>
-                      id: {issue.id}
+                      id: {issue.get('id')}
                   </Text>
                   <Text>
-                      summary: {issue.summary}
+                      summary: {issue.get('summary')}
                   </Text>
               </View>
           )
@@ -54,16 +62,17 @@ class separateReduxClient extends Component {
 
 const mapStateToProps = (state) => {
     return {
-        issues: state
+        issues: state.get('issues')
     }
 }
 
 const WrappedClient = connect(
-    mapStateToProps
+    mapStateToProps,
+    {loadIssues: modules.issues.loadIssues}
 )(separateReduxClient)
 
 const App = () => (
-    <Provider store={IssueStore}>
+    <Provider store={PMTstore}>
         <WrappedClient />
     </Provider>
 )
@@ -74,17 +83,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
+  }
 });
 
 AppRegistry.registerComponent('separateReduxClient', () => App);
